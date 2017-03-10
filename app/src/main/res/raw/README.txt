@@ -1,0 +1,1 @@
+This directory should contain tmdb_apikey.txt.  The key should be stored on the first line of the line.
