@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">MovieApp_Project1</string>
+    <string name="tmdb_baseURL">http://image.tmdb.org/t/p/</string>
+    <string name="tmdb_posterSize">w185</string>
+    <string name="tmdb_popularMoviesEndpoint">/movie/popular</string>
+    <string name="tmdb_topRatedMoviesEndpoint">/movie/top_rated</string>
 </resources>
