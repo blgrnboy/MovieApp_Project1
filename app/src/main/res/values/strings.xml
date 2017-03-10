@@ -4,5 +4,6 @@
     <string name="tmdb_posterSize">w185</string>
     <string name="tmdb_popularMoviesEndpoint">/movie/popular</string>
     <string name="tmdb_topRatedMoviesEndpoint">/movie/top_rated</string>
-
+    <string name="popularMoviesMenuText">Popular</string>
+    <string name="topRatedMoviesMenuText">Top Rated</string>
 </resources>
