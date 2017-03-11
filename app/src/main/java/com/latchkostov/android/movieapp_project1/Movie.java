@@ -6,6 +6,16 @@ package com.latchkostov.android.movieapp_project1;
 
 public class Movie {
     private String title;
+    private String originalTitle;
+
+    public String getOriginalTitle() {
+        return originalTitle;
+    }
+
+    public void setOriginalTitle(String originalTitle) {
+        this.originalTitle = originalTitle;
+    }
+
     private String releaseDate;
     private String overview;
     private final String basePosterPath;
@@ -68,8 +78,6 @@ public class Movie {
     public double getPopularity() {
         return this.popularity;
     }
-
-
 
     public boolean isAdultMovie() {
         return adultMovie;

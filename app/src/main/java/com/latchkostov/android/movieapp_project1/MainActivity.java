@@ -52,6 +52,8 @@ public class MainActivity extends AppCompatActivity
         apiKey = getApiKey();
         baseMovieUrl = getResources().getString(R.string.tmdb_movieBaseURL);
         baseMovieImageUrl = getResources().getString(R.string.tmdb_imageBaseURL);
+
+        loadPopularMovies();
     }
 
     @Override
@@ -95,12 +97,14 @@ public class MainActivity extends AppCompatActivity
         MovieService movieService = new MovieService(apiKey, baseMovieUrl, baseMovieImageUrl);
         pbLoadingIndicator.setVisibility(View.VISIBLE);
         movieService.getTopMovies(this);
+        setTitle("Top Movies");
     }
 
     void loadPopularMovies() {
         MovieService movieService = new MovieService(apiKey, baseMovieUrl, baseMovieImageUrl);
         pbLoadingIndicator.setVisibility(View.VISIBLE);
         movieService.getPopularMovies(this);
+        setTitle("Popular Movies");
     }
 
     @Override
@@ -138,6 +142,7 @@ public class MainActivity extends AppCompatActivity
                 movie.setVoteCount(movieObj.getInt("vote_count"));
                 movie.setVideo(movieObj.getBoolean("video"));
                 movie.setVoteAverage(movieObj.getDouble("vote_average"));
+                movie.setOriginalTitle(movieObj.getString("original_title"));
                 movies.add(movie);
             }
         } catch (JSONException e) {
