@@ -20,42 +20,33 @@ public class MovieService {
     String apiKey;
     private final String movieBaseUrl;
     private final String imageBaseUrl;
-    private String searchResults;
-    private MovieCallBack callBack;
 
-    public MovieService(String apiKey, String movieBaseUrl, String imageBaseUrl, MovieCallBack callBack) {
+    public MovieService(String apiKey, String movieBaseUrl, String imageBaseUrl) {
         this.apiKey = apiKey;
         this.movieBaseUrl = movieBaseUrl;
         this.imageBaseUrl = imageBaseUrl;
-        this.callBack = callBack;
     }
 
-    public Movie[] getTopMovies() {
+    public void getTopMovies(MovieCallBack callBack) {
         Uri uri = Uri.parse(movieBaseUrl).buildUpon()
                 .appendPath("top_rated")
                 .appendQueryParameter("api_key", apiKey).build();
         URL url = uriToUrl(uri);
 
         if (url != null) {
-            new MovieDatabaseTask().execute(url);
+            new MovieDatabaseTask(callBack).execute(url);
         }
-        ArrayList<Movie> movies = new ArrayList<Movie>();
-
-        return null;
     }
 
-    public Movie[] getPopularMovies() {
+    public void getPopularMovies(MovieCallBack callBack) {
         Uri uri = Uri.parse(movieBaseUrl).buildUpon()
                 .appendPath("popular")
                 .appendQueryParameter("api_key", apiKey).build();
         URL url = uriToUrl(uri);
 
         if (url != null) {
-            new MovieDatabaseTask().execute(url);
+            new MovieDatabaseTask(callBack).execute(url);
         }
-        ArrayList<Movie> movies = new ArrayList<Movie>();
-
-        return null;
     }
 
     private URL uriToUrl(Uri uri) {
@@ -70,12 +61,18 @@ public class MovieService {
 
     // Interface
     public interface MovieCallBack {
-        void onComplete(Movie[] movies);
+        void onComplete(String jsonResult);
         void onError(String error);
     }
 
     // Task to make the HTTP call
     public class MovieDatabaseTask extends AsyncTask<URL, Void, String> {
+
+        MovieCallBack callBack;
+
+        public MovieDatabaseTask(MovieCallBack callBack) {
+            this.callBack = callBack;
+        }
 
         @Override
         protected String doInBackground(URL... params) {
@@ -92,11 +89,9 @@ public class MovieService {
         }
 
         @Override
-        protected void onPostExecute(String s) {
-            if (s != null && !s.equals("")) {
-                searchResults = s;
-                Log.d("Test", searchResults);
-                callBack.onComplete(null);
+        protected void onPostExecute(String searchResults) {
+            if (searchResults != null && !searchResults.equals("")) {
+                callBack.onComplete(searchResults);
             } else {
                 callBack.onError("Something went wrong, there is no data!");
             }

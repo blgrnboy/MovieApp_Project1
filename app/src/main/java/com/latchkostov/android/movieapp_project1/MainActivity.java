@@ -7,6 +7,9 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -19,6 +22,8 @@ public class MainActivity extends AppCompatActivity
 
     private MovieAdapter mAdapter;
     private RecyclerView mRecyclerView;
+    private TextView mTestTextView;
+    private ProgressBar pbLoadingIndicator;
     private String apiKey;
     private String baseMovieUrl;
     private String baseMovieImageUrl;
@@ -28,6 +33,8 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        pbLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator);
+        mTestTextView = (TextView) findViewById(R.id.tv_test);
         mRecyclerView = (RecyclerView) findViewById(R.id.recyclerview_movies);
 
         // Layout
@@ -81,13 +88,15 @@ public class MainActivity extends AppCompatActivity
     }
 
     void loadTopRatedMovies() {
-        MovieService movieService = new MovieService(apiKey, baseMovieUrl, baseMovieImageUrl, this);
-        movieService.getTopMovies();
+        MovieService movieService = new MovieService(apiKey, baseMovieUrl, baseMovieImageUrl);
+        pbLoadingIndicator.setVisibility(View.VISIBLE);
+        movieService.getTopMovies(this);
     }
 
     void loadPopularMovies() {
-        MovieService movieService = new MovieService(apiKey, baseMovieUrl, baseMovieImageUrl, this);
-        movieService.getPopularMovies();
+        MovieService movieService = new MovieService(apiKey, baseMovieUrl, baseMovieImageUrl);
+        pbLoadingIndicator.setVisibility(View.VISIBLE);
+        movieService.getPopularMovies(this);
     }
 
     @Override
@@ -96,8 +105,9 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onComplete(Movie[] movies) {
-        Log.d("DONE", "DONE!");
+    public void onComplete(String jsonResult) {
+        pbLoadingIndicator.setVisibility(View.INVISIBLE);
+        mTestTextView.setText(jsonResult);
     }
 
     @Override
