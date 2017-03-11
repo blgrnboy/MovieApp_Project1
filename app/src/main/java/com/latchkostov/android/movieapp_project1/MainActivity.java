@@ -2,35 +2,45 @@ package com.latchkostov.android.movieapp_project1;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ImageView;
-
-import com.squareup.picasso.Picasso;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity
+        implements MovieAdapter.MovieAdapterOnClickHandler, MovieService.MovieCallBack {
 
-    ImageView imageView;
+    private MovieAdapter mAdapter;
+    private RecyclerView mRecyclerView;
+    private String apiKey;
+    private String baseMovieUrl;
+    private String baseMovieImageUrl;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        imageView = (ImageView) findViewById(R.id.iv_test);
+        mRecyclerView = (RecyclerView) findViewById(R.id.recyclerview_movies);
 
-        Picasso.with(this).load("http://i.imgur.com/DvpvklR.png").into(imageView);
-        String key = getApiKey();
-        Log.d("key", key);
+        // Layout
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 2);
+        mRecyclerView.setLayoutManager(gridLayoutManager);
+
+        mAdapter = new MovieAdapter(this);
+        mRecyclerView.setAdapter(mAdapter);
+
+        apiKey = getApiKey();
+        baseMovieUrl = getResources().getString(R.string.tmdb_movieBaseURL);
+        baseMovieImageUrl = getResources().getString(R.string.tmdb_imageBaseURL);
+        //Log.d("key", key);
     }
 
     @Override
@@ -45,10 +55,10 @@ public class MainActivity extends AppCompatActivity {
 
         switch (id) {
             case R.id.menu_popularMovies:
-                Log.d("test", "popular movies");
+                loadPopularMovies();
                 return true;
             case R.id.menu_topRatedMovies:
-                Log.d("test", "top rated movies");
+                loadTopRatedMovies();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -68,5 +78,30 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return key;
+    }
+
+    void loadTopRatedMovies() {
+        MovieService movieService = new MovieService(apiKey, baseMovieUrl, baseMovieImageUrl, this);
+        movieService.getTopMovies();
+    }
+
+    void loadPopularMovies() {
+        MovieService movieService = new MovieService(apiKey, baseMovieUrl, baseMovieImageUrl, this);
+        movieService.getPopularMovies();
+    }
+
+    @Override
+    public void onClick(Movie movie) {
+
+    }
+
+    @Override
+    public void onComplete(Movie[] movies) {
+        Log.d("DONE", "DONE!");
+    }
+
+    @Override
+    public void onError(String error) {
+        // Display error somewhere
     }
 }
