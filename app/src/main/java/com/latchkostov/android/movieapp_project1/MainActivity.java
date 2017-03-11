@@ -11,11 +11,16 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity
         implements MovieAdapter.MovieAdapterOnClickHandler, MovieService.MovieCallBack {
@@ -47,7 +52,6 @@ public class MainActivity extends AppCompatActivity
         apiKey = getApiKey();
         baseMovieUrl = getResources().getString(R.string.tmdb_movieBaseURL);
         baseMovieImageUrl = getResources().getString(R.string.tmdb_imageBaseURL);
-        //Log.d("key", key);
     }
 
     @Override
@@ -107,7 +111,40 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onComplete(String jsonResult) {
         pbLoadingIndicator.setVisibility(View.INVISIBLE);
-        mTestTextView.setText(jsonResult);
+
+        Movie[] movies = parseMovies(jsonResult);
+        mAdapter.setMovies(movies);
+    }
+
+    private Movie[] parseMovies(String json) {
+        ArrayList<Movie> movies = new ArrayList<Movie>();
+        String tmdbBaseImagePath =
+            getResources().getString(R.string.tmdb_imageBaseURL) +
+            getResources().getString(R.string.tmdb_posterSize);
+
+        try {
+            JSONObject reader = new JSONObject(json);
+            JSONArray resultArray = reader.getJSONArray("results");
+
+            for (int i = 0; i < resultArray.length(); i++) {
+                JSONObject movieObj = resultArray.getJSONObject(i);
+                Movie movie = new Movie(tmdbBaseImagePath);
+                movie.setOverview(movieObj.getString("overview"));
+                movie.setPosterPath(movieObj.getString("poster_path"));
+                movie.setTitle(movieObj.getString("title"));
+                movie.setReleaseDate(movieObj.getString("release_date"));
+                movie.setAdultMovie(movieObj.getBoolean("adult"));
+                movie.setPopularity(movieObj.getDouble("popularity"));
+                movie.setVoteCount(movieObj.getInt("vote_count"));
+                movie.setVideo(movieObj.getBoolean("video"));
+                movie.setVoteAverage(movieObj.getDouble("vote_average"));
+                movies.add(movie);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return movies.toArray(new Movie[movies.size()]);
     }
 
     @Override
