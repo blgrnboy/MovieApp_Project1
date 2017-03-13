@@ -30,7 +30,7 @@ public class DetailActivity extends AppCompatActivity {
             movie = (Movie) intent.getParcelableExtra("movie");
         }
 
-        setTitle("Details");
+        //setTitle("Details");
 
         mMovieNameTextView = (TextView) findViewById(R.id.tv_movie_name);
         mMovieNameTextView.setText(movie.getOriginalTitle());

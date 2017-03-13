@@ -152,6 +152,7 @@ public class MainActivity extends AppCompatActivity
             for (int i = 0; i < resultArray.length(); i++) {
                 JSONObject movieObj = resultArray.getJSONObject(i);
                 Movie movie = new Movie(tmdbBaseImagePath);
+                movie.setId(movieObj.getInt("id"));
                 movie.setOverview(movieObj.getString("overview"));
                 movie.setPosterPath(movieObj.getString("poster_path"));
                 movie.setTitle(movieObj.getString("title"));
