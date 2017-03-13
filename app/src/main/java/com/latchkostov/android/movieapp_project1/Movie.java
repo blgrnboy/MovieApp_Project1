@@ -125,7 +125,7 @@ public class Movie implements Parcelable {
         return 0;
     }
 
-    public Movie(Parcel in){
+    private Movie(Parcel in){
         this.basePosterPath = in.readString();
         this.originalTitle = in.readString();
         this.overview = in.readString();
