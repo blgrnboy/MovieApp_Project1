@@ -1,10 +1,17 @@
 package com.latchkostov.android.movieapp_project1;
 
+import android.icu.text.SimpleDateFormat;
+import android.os.Parcel;
+import android.os.Parcelable;
+
+import java.text.ParseException;
+import java.util.Date;
+
 /**
  * Created by Latch on 3/10/2017.
  */
 
-public class Movie {
+public class Movie implements Parcelable {
     private String title;
     private String originalTitle;
 
@@ -16,7 +23,7 @@ public class Movie {
         this.originalTitle = originalTitle;
     }
 
-    private String releaseDate;
+    private Date releaseDate;
     private String overview;
     private final String basePosterPath;
     private String posterPath;
@@ -40,10 +47,16 @@ public class Movie {
     }
 
     public void setReleaseDate(String releaseDate) {
-        this.releaseDate = releaseDate;
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        try {
+            Date date = dateFormat.parse(releaseDate);
+            this.releaseDate = date;
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
     }
 
-    public String getReleaseDate() {
+    public Date getReleaseDate() {
         return this.releaseDate;
     }
 
@@ -106,4 +119,48 @@ public class Movie {
     public int getVoteCount() {
         return this.voteCount;
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    public Movie(Parcel in){
+        this.basePosterPath = in.readString();
+        this.originalTitle = in.readString();
+        this.overview = in.readString();
+        this.posterPath = in.readString();
+        this.releaseDate = new Date(in.readLong());
+        this.title = in.readString();
+        this.voteCount = in.readInt();
+        this.popularity = in.readDouble();
+        this.voteAverage = in.readDouble();
+        this.adultMovie = in.readByte() != 0;
+        this.video = in.readByte() != 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(this.basePosterPath);
+        dest.writeString(this.originalTitle);
+        dest.writeString(this.overview);
+        dest.writeString(posterPath);
+        dest.writeLong(releaseDate.getTime());
+        dest.writeString(this.title);
+        dest.writeInt(this.voteCount);
+        dest.writeDouble(this.popularity);
+        dest.writeDouble(this.voteAverage);
+        dest.writeByte((byte) (this.adultMovie ? 1 : 0));
+        dest.writeByte((byte) (this.video ? 1 : 0));
+    }
+
+    public static final Parcelable.Creator CREATOR = new Parcelable.Creator() {
+        public Movie createFromParcel(Parcel in) {
+            return new Movie(in);
+        }
+
+        public Movie[] newArray(int size) {
+            return new Movie[size];
+        }
+    };
 }

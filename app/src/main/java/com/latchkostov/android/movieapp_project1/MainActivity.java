@@ -1,5 +1,6 @@
 package com.latchkostov.android.movieapp_project1;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
@@ -109,7 +110,9 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onClick(Movie movie) {
-
+        Intent intent = new Intent(this, DetailActivity.class);
+        intent.putExtra("movie", movie);
+        startActivity(intent);
     }
 
     @Override
