@@ -22,8 +22,14 @@ public class DetailActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
-        Intent intent = getIntent();
-        movie = (Movie) intent.getParcelableExtra("movie");
+
+        if (savedInstanceState != null && savedInstanceState.containsKey("movie")) {
+            this.movie = savedInstanceState.getParcelable("movie");
+        } else {
+            Intent intent = getIntent();
+            movie = (Movie) intent.getParcelableExtra("movie");
+        }
+
         setTitle("Details");
 
         mMovieNameTextView = (TextView) findViewById(R.id.tv_movie_name);
@@ -40,5 +46,13 @@ public class DetailActivity extends AppCompatActivity {
 
         mMovieOverviewTextView = (TextView) findViewById(R.id.tv_movie_overview);
         mMovieOverviewTextView.setText(movie.getOverview());
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        if (movie != null) {
+            outState.putParcelable("movie", movie);
+        }
+        super.onSaveInstanceState(outState);
     }
 }

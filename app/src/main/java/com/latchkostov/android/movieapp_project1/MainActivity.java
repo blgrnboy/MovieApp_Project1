@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity
     private String apiKey;
     private String baseMovieUrl;
     private String baseMovieImageUrl;
+    private Movie[] movies;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,7 +55,20 @@ public class MainActivity extends AppCompatActivity
         baseMovieUrl = getResources().getString(R.string.tmdb_movieBaseURL);
         baseMovieImageUrl = getResources().getString(R.string.tmdb_imageBaseURL);
 
-        loadPopularMovies();
+        if (savedInstanceState != null && savedInstanceState.containsKey("movies")) {
+            this.movies = (Movie[]) savedInstanceState.getParcelableArray("movies");
+            mAdapter.setMovies(this.movies);
+        } else {
+            loadPopularMovies();
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        if (movies != null && movies.length > 0) {
+            outState.putParcelableArray("movies", movies);
+        }
+        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -120,7 +134,9 @@ public class MainActivity extends AppCompatActivity
         pbLoadingIndicator.setVisibility(View.INVISIBLE);
 
         Movie[] movies = parseMovies(jsonResult);
+        this.movies = movies;
         mAdapter.setMovies(movies);
+        Log.d("", "API CALL COMPLETE");
     }
 
     private Movie[] parseMovies(String json) {
