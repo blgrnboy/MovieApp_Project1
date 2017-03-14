@@ -1,5 +1,6 @@
 package com.latchkostov.android.movieapp_project1;
 
+import android.app.Activity;
 import android.content.Intent;
 
 import java.io.IOException;
@@ -12,7 +13,10 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.latchkostov.android.movieapp_project1.utilities.NetworkUtils;
@@ -32,9 +36,12 @@ public class DetailActivity extends AppCompatActivity {
     private ImageView mMoviePosterImageView;
     private TextView mReleaseDateTextView;
     private TextView mVoteAverageTextView;
+    private Button mAddRemoveFavoriteButton;
     private TextView mMovieOverviewTextView;
     private TextView mMovieTrailersTextView;
     private TextView mMovieReviewsTextView;
+    private ProgressBar mMovieReviewsProgressBar;
+    private ProgressBar mMovieTrailersProgressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,30 +55,59 @@ public class DetailActivity extends AppCompatActivity {
             this.apiKey = savedInstanceState.getString("api_key");
         } else {
             Intent intent = getIntent();
-            this.movie = (Movie) intent.getParcelableExtra("movie");
+            this.movie = intent.getParcelableExtra("movie");
             this.apiKey = intent.getStringExtra("api_key");
         }
 
         setTitle("Details");
 
+        // Movie Name TextView
         mMovieNameTextView = (TextView) findViewById(R.id.tv_movie_name);
         mMovieNameTextView.setText(movie.getOriginalTitle());
+
+        // Movie Poster ImageView
         mMoviePosterImageView = (ImageView) findViewById(R.id.iv_movie_poster);
         Picasso.with(this).load(movie.getPosterPath()).into(mMoviePosterImageView);
+
+        // Release Date TextView
         mReleaseDateTextView = (TextView) findViewById(R.id.tv_movie_release_date);
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(movie.getReleaseDate());
         mReleaseDateTextView.setText(String.valueOf(calendar.get(Calendar.YEAR)));
 
+        // Vote average TextView
         mVoteAverageTextView = (TextView) findViewById(R.id.tv_vote_average);
         mVoteAverageTextView.setText(String.valueOf(movie.getVoteAverage()) + "/10");
 
+        // Favorite Button
+        mAddRemoveFavoriteButton = (Button) findViewById(R.id.btn_addremovefavorite);
+        setFavoriteButtonText();
+        final FavoriteMovies favMovies = FavoriteMovies.getInstance();
+        mAddRemoveFavoriteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (movie.isFavorite()) {
+                    favMovies.remove(movie);
+                } else {
+                    favMovies.add(movie);
+                }
+                setFavoriteButtonText();
+            }
+        });
+
+        // Overview TextView
         mMovieOverviewTextView = (TextView) findViewById(R.id.tv_movie_overview);
         mMovieOverviewTextView.setText(movie.getOverview());
 
+        // Trailers TextView
+        mMovieTrailersProgressBar = (ProgressBar) findViewById(R.id.pb_trailers_loading_indicator);
+        mMovieTrailersProgressBar.setVisibility(View.VISIBLE);
         mMovieTrailersTextView = (TextView) findViewById(R.id.tv_movie_trailers);
         new GetMovieTrailersTask().execute();
 
+        // Reviews TextView
+        mMovieReviewsProgressBar = (ProgressBar) findViewById(R.id.pb_reviews_loading_indicator);
+        mMovieReviewsProgressBar.setVisibility(View.VISIBLE);
         mMovieReviewsTextView = (TextView) findViewById(R.id.tv_movie_reviews);
         new GetMovieReviewsTask().execute();
     }
@@ -85,6 +121,22 @@ public class DetailActivity extends AppCompatActivity {
             outState.putString("api_key", apiKey);
         }
         super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent();
+        intent.putExtra("movie", movie);
+        setResult(Activity.RESULT_OK, intent);
+        super.onBackPressed();
+    }
+
+    private void setFavoriteButtonText() {
+        if (movie.isFavorite()) {
+            mAddRemoveFavoriteButton.setText("Remove Favorite");
+        } else {
+            mAddRemoveFavoriteButton.setText("Add Favorite");
+        }
     }
 
     private URL buildTrailerRequestURL() {
@@ -126,16 +178,20 @@ public class DetailActivity extends AppCompatActivity {
                 response = NetworkUtils.getResponseFromHttpUrl(url);
             } catch (IOException e) {
                 e.printStackTrace();
+                response = "Error: " + e.getMessage();
             }
             return response;
         }
 
         @Override
-        protected void onPostExecute(String json) {
-            if (json != null && json.length() > 0) {
+        protected void onPostExecute(String response) {
+            if (response != null && response.startsWith("Error")) {
+                mMovieTrailersTextView.setText("Could not retrieve trailers: " + response);
+            }
+            else if (response != null && response.length() > 0) {
                 try {
                     ArrayList<MovieVideo> tempMovieVideos = new ArrayList<MovieVideo>();
-                    JSONObject reader = new JSONObject(json);
+                    JSONObject reader = new JSONObject(response);
                     JSONArray results = reader.getJSONArray("results");
                     for (int i = 0; i < results.length(); i++) {
                         MovieVideo movieVideo = new MovieVideo();
@@ -153,9 +209,12 @@ public class DetailActivity extends AppCompatActivity {
                     movieVideos = tempMovieVideos.toArray(new MovieVideo[tempMovieVideos.size()]);
                 } catch (JSONException e) {
                     e.printStackTrace();
+                    mMovieTrailersTextView.setText("Could not retrieve trailers: " + e.getMessage());
                 }
             }
-            mMovieTrailersTextView.setText(json);
+
+            mMovieTrailersProgressBar.setVisibility(View.INVISIBLE);
+            //mMovieTrailersTextView.setText(response);
         }
     }
 
@@ -170,16 +229,20 @@ public class DetailActivity extends AppCompatActivity {
                 response = NetworkUtils.getResponseFromHttpUrl(url);
             } catch (IOException e) {
                 e.printStackTrace();
+                response = "Error:" + e.getMessage();
             }
             return response;
         }
 
         @Override
-        protected void onPostExecute(String json) {
-            if (json != null && json.length() > 0) {
+        protected void onPostExecute(String response) {
+            if (response != null && response.startsWith("Error")) {
+                mMovieReviewsTextView.setText("Could not retrieve reviews: " + response);
+            }
+            else if (response != null && response.length() > 0) {
                 try {
                     ArrayList<MovieReview> tempMovieReviews = new ArrayList<MovieReview>();
-                    JSONObject reader = new JSONObject(json);
+                    JSONObject reader = new JSONObject(response);
                     JSONArray results = reader.getJSONArray("results");
                     for (int i = 0; i < results.length(); i++) {
                         MovieReview movieReview = new MovieReview();
@@ -193,9 +256,11 @@ public class DetailActivity extends AppCompatActivity {
                     movieReviews = tempMovieReviews.toArray(new MovieReview[tempMovieReviews.size()]);
                 } catch (JSONException e) {
                     e.printStackTrace();
+                    mMovieReviewsTextView.setText("Could not retrieve reviews: " + e.getMessage());
                 }
             }
-            mMovieReviewsTextView.setText(json);
+            mMovieReviewsProgressBar.setVisibility(View.INVISIBLE);
+            //mMovieReviewsTextView.setText(response);
         }
     }
 }

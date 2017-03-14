@@ -1,5 +1,6 @@
 package com.latchkostov.android.movieapp_project1;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -32,9 +33,10 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity
         implements MovieAdapter.MovieAdapterOnClickHandler, MovieCallback{
 
+    private int currentMenuSelection;
     private MovieAdapter mAdapter;
     private RecyclerView mRecyclerView;
-    private TextView mTestTextView;
+    private TextView mErrorTextView;
     private ProgressBar pbLoadingIndicator;
     private String apiKey;
     private String baseMovieUrl;
@@ -47,7 +49,7 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         pbLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator);
-        mTestTextView = (TextView) findViewById(R.id.tv_test);
+        mErrorTextView = (TextView) findViewById(R.id.tv_main_error);
         mRecyclerView = (RecyclerView) findViewById(R.id.recyclerview_movies);
 
         // Layout
@@ -63,6 +65,7 @@ public class MainActivity extends AppCompatActivity
 
         if (savedInstanceState != null && savedInstanceState.containsKey("movies")) {
             this.movies = (Movie[]) savedInstanceState.getParcelableArray("movies");
+            this.currentMenuSelection = savedInstanceState.getInt("currentMenuSelection");
             mAdapter.setMovies(this.movies);
         } else {
             loadPopularMovies();
@@ -73,8 +76,34 @@ public class MainActivity extends AppCompatActivity
     protected void onSaveInstanceState(Bundle outState) {
         if (movies != null && movies.length > 0) {
             outState.putParcelableArray("movies", movies);
+            outState.putInt("currentMenuSelection", this.currentMenuSelection);
         }
         super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == 1 && resultCode == Activity.RESULT_OK) {
+            Movie intentMovie = data.getParcelableExtra("movie");
+            boolean changesOccurred = false;
+            for (int i = 0; i < this.movies.length; i++) {
+                if (this.movies[i].getId() == intentMovie.getId()) {
+                    if (this.movies[i].isFavorite() != intentMovie.isFavorite()) {
+                        this.movies[i] = intentMovie;
+                        changesOccurred = true;
+                    }
+                }
+            }
+
+            if (changesOccurred) {
+                if (currentMenuSelection == R.id.menu_favorite) {
+                    this.movies = FavoriteMovies.getInstance().getAll();
+                }
+                mAdapter.setMovies(this.movies);
+            }
+        }
     }
 
     @Override
@@ -86,13 +115,19 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-
+        currentMenuSelection = id;
         switch (id) {
             case R.id.menu_popularMovies:
                 loadPopularMovies();
                 return true;
             case R.id.menu_topRatedMovies:
                 loadTopRatedMovies();
+                return true;
+            case R.id.menu_favorite:
+                FavoriteMovies favoriteMovies = FavoriteMovies.getInstance();
+                movies = favoriteMovies.getAll();
+                mAdapter.setMovies(movies);
+                setTitle("Favorite Movies");
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -155,7 +190,7 @@ public class MainActivity extends AppCompatActivity
         Intent intent = new Intent(this, DetailActivity.class);
         intent.putExtra("movie", movie);
         intent.putExtra("api_key", apiKey);
-        startActivity(intent);
+        startActivityForResult(intent, 1);
     }
 
     private Movie[] parseMovies(String json) {
@@ -193,17 +228,29 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onComplete(String jsonResult) {
+        mErrorTextView.setText("");
         pbLoadingIndicator.setVisibility(View.INVISIBLE);
 
-        Movie[] movies = parseMovies(jsonResult);
-        this.movies = movies;
-        mAdapter.setMovies(movies);
+        Movie[] newMovies = parseMovies(jsonResult);
+        Movie[] favoriteMovies = FavoriteMovies.getInstance().getAll();
+        if (favoriteMovies != null && favoriteMovies.length > 0) {
+            for (Movie favoriteMovie : favoriteMovies) {
+                for (Movie newMovie : newMovies) {
+                    if (newMovie.getId() == favoriteMovie.getId()) {
+                        newMovie.setFavorite(true);
+                    }
+                }
+            }
+        }
+        this.movies = newMovies;
+        mAdapter.setMovies(newMovies);
         Log.d("", "API CALL COMPLETE");
     }
 
     @Override
     public void onError(String error) {
-        // Display error somewhere
+        mErrorTextView.setText(error);
+        pbLoadingIndicator.setVisibility(View.INVISIBLE);
     }
 
     // Task to retrieve movies
@@ -222,8 +269,7 @@ public class MainActivity extends AppCompatActivity
             try {
                 searchResults = NetworkUtils.getResponseFromHttpUrl(url);
             } catch (IOException e) {
-                callBack.onError(e.getMessage());
-                e.printStackTrace();
+                searchResults = "Error - " + e.getMessage();
             }
 
             return searchResults;
@@ -232,7 +278,11 @@ public class MainActivity extends AppCompatActivity
         @Override
         protected void onPostExecute(String searchResults) {
             if (searchResults != null && !searchResults.equals("")) {
-                callBack.onComplete(searchResults);
+                if (searchResults.startsWith("Error")) {
+                    callBack.onError(searchResults);
+                } else {
+                    callBack.onComplete(searchResults);
+                }
             } else {
                 callBack.onError("Something went wrong, there is no data!");
             }

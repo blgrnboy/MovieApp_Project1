@@ -58,6 +58,10 @@
                         android:layout_height="match_parent"
                         android:paddingLeft="20dp"
                         android:text="test"/>
+                    <Button
+                        android:id="@+id/btn_addremovefavorite"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
                 </LinearLayout>
             </LinearLayout>
             <TextView
@@ -70,6 +74,12 @@
                 android:paddingLeft="10dp"
                 android:paddingRight="10dp"/>
 
+            <ProgressBar
+                android:id="@+id/pb_trailers_loading_indicator"
+                android:layout_height="42dp"
+                android:layout_width="42dp"
+                android:layout_gravity="center"
+                android:visibility="invisible" />
             <TextView
                 android:id="@+id/tv_movie_trailers"
                 android:layout_width="match_parent"
@@ -80,6 +90,12 @@
                 android:paddingLeft="10dp"
                 android:paddingRight="10dp"/>
 
+            <ProgressBar
+                android:id="@+id/pb_reviews_loading_indicator"
+                android:layout_height="42dp"
+                android:layout_width="42dp"
+                android:layout_gravity="center"
+                android:visibility="invisible" />
             <TextView
                 android:id="@+id/tv_movie_reviews"
                 android:layout_width="match_parent"

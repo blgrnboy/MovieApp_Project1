@@ -7,4 +7,5 @@
     <string name="tmdb_topRatedMoviesEndpoint">/movie/top_rated</string>
     <string name="popularMoviesMenuText">Popular</string>
     <string name="topRatedMoviesMenuText">Top Rated</string>
+    <string name="favoriteMoviesMenuText">Favorite</string>
 </resources>
