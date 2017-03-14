@@ -115,6 +115,7 @@ public class DetailActivity extends AppCompatActivity {
         return url;
     }
 
+    // Task to get movie trailers
     public class GetMovieTrailersTask extends AsyncTask<Void, Void, String> {
 
         @Override
@@ -158,6 +159,7 @@ public class DetailActivity extends AppCompatActivity {
         }
     }
 
+    // Task to get movie reviews
     public class GetMovieReviewsTask extends AsyncTask<Void, Void, String> {
 
         @Override

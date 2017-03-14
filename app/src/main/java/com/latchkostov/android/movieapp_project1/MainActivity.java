@@ -99,7 +99,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    String getApiKey() {
+    private String getApiKey() {
         String key = null;
         InputStream is = getResources().openRawResource(R.raw.tmdb_apikey);
         try {
@@ -114,7 +114,7 @@ public class MainActivity extends AppCompatActivity
         return key;
     }
 
-    void loadTopRatedMovies() {
+    private void loadTopRatedMovies() {
         pbLoadingIndicator.setVisibility(View.VISIBLE);
         Uri uri = Uri.parse(baseMovieUrl).buildUpon()
                 .appendPath("top_rated")
@@ -132,7 +132,7 @@ public class MainActivity extends AppCompatActivity
         setTitle("Top Movies");
     }
 
-    void loadPopularMovies() {
+    private void loadPopularMovies() {
         pbLoadingIndicator.setVisibility(View.VISIBLE);
         Uri uri = Uri.parse(baseMovieUrl).buildUpon()
                 .appendPath("popular")
