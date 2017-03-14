@@ -1,6 +1,8 @@
 package com.latchkostov.android.movieapp_project1;
 
 import android.content.Intent;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
@@ -12,6 +14,8 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.latchkostov.android.movieapp_project1.utilities.NetworkUtils;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -21,10 +25,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity
-        implements MovieAdapter.MovieAdapterOnClickHandler, MovieService.MovieCallBack {
+        implements MovieAdapter.MovieAdapterOnClickHandler, MovieCallback{
 
     private MovieAdapter mAdapter;
     private RecyclerView mRecyclerView;
@@ -109,16 +115,38 @@ public class MainActivity extends AppCompatActivity
     }
 
     void loadTopRatedMovies() {
-        MovieService movieService = new MovieService(apiKey, baseMovieUrl, baseMovieImageUrl);
         pbLoadingIndicator.setVisibility(View.VISIBLE);
-        movieService.getTopMovies(this);
+        Uri uri = Uri.parse(baseMovieUrl).buildUpon()
+                .appendPath("top_rated")
+                .appendQueryParameter("api_key", apiKey).build();
+        URL url = null;
+        try {
+            url = NetworkUtils.uriToUrl(uri);
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+
+        if (url != null) {
+            new MovieDatabaseTask(this).execute(url);
+        }
         setTitle("Top Movies");
     }
 
     void loadPopularMovies() {
-        MovieService movieService = new MovieService(apiKey, baseMovieUrl, baseMovieImageUrl);
         pbLoadingIndicator.setVisibility(View.VISIBLE);
-        movieService.getPopularMovies(this);
+        Uri uri = Uri.parse(baseMovieUrl).buildUpon()
+                .appendPath("popular")
+                .appendQueryParameter("api_key", apiKey).build();
+        URL url = null;
+        try {
+            url = NetworkUtils.uriToUrl(uri);
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+
+        if (url != null) {
+            new MovieDatabaseTask(this).execute(url);
+        }
         setTitle("Popular Movies");
     }
 
@@ -126,17 +154,8 @@ public class MainActivity extends AppCompatActivity
     public void onClick(Movie movie) {
         Intent intent = new Intent(this, DetailActivity.class);
         intent.putExtra("movie", movie);
+        intent.putExtra("api_key", apiKey);
         startActivity(intent);
-    }
-
-    @Override
-    public void onComplete(String jsonResult) {
-        pbLoadingIndicator.setVisibility(View.INVISIBLE);
-
-        Movie[] movies = parseMovies(jsonResult);
-        this.movies = movies;
-        mAdapter.setMovies(movies);
-        Log.d("", "API CALL COMPLETE");
     }
 
     private Movie[] parseMovies(String json) {
@@ -173,7 +192,50 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public void onComplete(String jsonResult) {
+        pbLoadingIndicator.setVisibility(View.INVISIBLE);
+
+        Movie[] movies = parseMovies(jsonResult);
+        this.movies = movies;
+        mAdapter.setMovies(movies);
+        Log.d("", "API CALL COMPLETE");
+    }
+
+    @Override
     public void onError(String error) {
         // Display error somewhere
+    }
+
+    // Task to retrieve movies
+    public class MovieDatabaseTask extends AsyncTask<URL, Void, String> {
+
+        MovieCallback callBack;
+
+        public MovieDatabaseTask(MovieCallback callBack) {
+            this.callBack = callBack;
+        }
+
+        @Override
+        protected String doInBackground(URL... params) {
+            URL url = params[0];
+            String searchResults = null;
+            try {
+                searchResults = NetworkUtils.getResponseFromHttpUrl(url);
+            } catch (IOException e) {
+                callBack.onError(e.getMessage());
+                e.printStackTrace();
+            }
+
+            return searchResults;
+        }
+
+        @Override
+        protected void onPostExecute(String searchResults) {
+            if (searchResults != null && !searchResults.equals("")) {
+                callBack.onComplete(searchResults);
+            } else {
+                callBack.onError("Something went wrong, there is no data!");
+            }
+        }
     }
 }

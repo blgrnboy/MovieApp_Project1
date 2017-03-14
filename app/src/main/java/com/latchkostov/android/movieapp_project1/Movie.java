@@ -1,6 +1,6 @@
 package com.latchkostov.android.movieapp_project1;
 
-import android.icu.text.SimpleDateFormat;
+import java.text.SimpleDateFormat;
 import android.os.Parcel;
 import android.os.Parcelable;
 

@@ -22,8 +22,5 @@ public class App extends Application {
 
         // Initialize Stetho with the Initializer
         Stetho.initialize(initializer);
-        new OkHttpClient.Builder()
-                .addNetworkInterceptor(new StethoInterceptor())
-                .build();
     }
 }
