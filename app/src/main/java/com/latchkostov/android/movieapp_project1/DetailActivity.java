@@ -188,12 +188,15 @@ public class DetailActivity extends AppCompatActivity
 
     @Override
     public void onClick(MovieVideo movieVideo) {
+        Uri uri = Uri.parse(getString(R.string.youtube_video_base_url)).buildUpon()
+                .appendQueryParameter("v", movieVideo.getKey()).build();
 
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        startActivity(intent);
     }
 
     @Override
     public void onClick(MovieReview movieReview) {
-
     }
 
     // Task to get movie trailers

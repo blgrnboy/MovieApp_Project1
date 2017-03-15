@@ -5,6 +5,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 /**
@@ -32,8 +33,14 @@ public class MovieVideoAdapter extends RecyclerView.Adapter<MovieVideoAdapter.Mo
 
     @Override
     public void onBindViewHolder(MovieVideoAdapterViewHolder holder, int position) {
-        MovieVideo movieVideo = movieVideos[position];
+        final MovieVideo movieVideo = movieVideos[position];
         holder.mMovieVideoTextView.setText(movieVideo.getName());
+        holder.mMovieVideoPlayButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mClickHandler.onClick(movieVideo);
+            }
+        });
     }
 
     @Override
@@ -48,21 +55,19 @@ public class MovieVideoAdapter extends RecyclerView.Adapter<MovieVideoAdapter.Mo
     }
 
     // ViewHolder
-    public class MovieVideoAdapterViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    public class MovieVideoAdapterViewHolder extends RecyclerView.ViewHolder {
 
         public final TextView mMovieVideoTextView;
+        public final Button mMovieVideoPlayButton;
 
         public MovieVideoAdapterViewHolder(View view) {
             super(view);
             mMovieVideoTextView = (TextView) view.findViewById(R.id.tv_movie_video_name);
-            view.setOnClickListener(this);
+            mMovieVideoPlayButton = (Button) view.findViewById(R.id.btn_play_movie_video);
+            //view.setOnClickListener(this);
         }
 
-        @Override
-        public void onClick(View v) {
-            MovieVideo movieVideo = movieVideos[getAdapterPosition()];
-            mClickHandler.onClick(movieVideo);
-        }
+
     }
     // END ViewHolder
 

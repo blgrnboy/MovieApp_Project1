@@ -19,4 +19,5 @@
     <string name="trailersRetrievalError">Could not retrieve trailers: %1$s</string>
     <string name="reviewsRetrievalError">Could not retrieve reviews: %1$s</string>
     <string name="reviewAuthor">Author: %1$s</string>
+    <string name="youtube_video_base_url">https://www.youtube.com/watch</string>
 </resources>
