@@ -15,6 +15,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -40,7 +41,7 @@ public class DetailActivity extends AppCompatActivity
     private TextView mMovieTrailersTextView;
     private TextView mMovieReviewsTextView;
     private ProgressBar mMovieReviewsProgressBar;
-    private ProgressBar mMovieTrailersProgressBar;
+    private ProgressBar mMovieVideosProgressBar;
 
     private MovieVideoAdapter mMovieVideoAdapter;
 
@@ -67,18 +68,35 @@ public class DetailActivity extends AppCompatActivity
         mMovieReviewAdapter = new MovieReviewAdapter(this);
         mMovieReviewRecyclerView.setAdapter(mMovieReviewAdapter);
 
+        // Movie Videos ProgressBar and TextView
+        mMovieVideosProgressBar = (ProgressBar) findViewById(R.id.pb_trailers_loading_indicator);
+        mMovieVideosProgressBar.setVisibility(View.VISIBLE);
+        mMovieTrailersTextView = (TextView) findViewById(R.id.tv_movie_trailers);
+
+        // Movie Reviews ProgressBar and TextView
+        mMovieReviewsProgressBar = (ProgressBar) findViewById(R.id.pb_reviews_loading_indicator);
+        mMovieReviewsProgressBar.setVisibility(View.VISIBLE);
+        mMovieReviewsTextView = (TextView) findViewById(R.id.tv_movie_reviews);
+
         if (savedInstanceState != null && savedInstanceState.containsKey("movie")) {
+            // Instance was saved
             this.movie = savedInstanceState.getParcelable("movie");
-            this.movieReviews = (MovieReview[]) savedInstanceState.getParcelableArray("movieReviews");
-            this.movieVideos = (MovieVideo[]) savedInstanceState.getParcelableArray("movieVideos");
             this.apiKey = savedInstanceState.getString("api_key");
+            this.movieReviews = (MovieReview[]) savedInstanceState.getParcelableArray("movieReviews");
+            mMovieReviewAdapter.setMovieReviews(this.movieReviews);
+            mMovieReviewsProgressBar.setVisibility(View.INVISIBLE);
+            this.movieVideos = (MovieVideo[]) savedInstanceState.getParcelableArray("movieVideos");
+            mMovieVideoAdapter.setMovieVideos(this.movieVideos);
+            mMovieVideosProgressBar.setVisibility(View.INVISIBLE);
         } else {
-            Intent intent = getIntent();
-            this.movie = intent.getParcelableExtra("movie");
-            this.apiKey = intent.getStringExtra("api_key");
+            executeFreshStartTasks();
         }
 
         setTitle("Details");
+
+        // Overview TextView
+        TextView mMovieOverviewTextView = (TextView) findViewById(R.id.tv_movie_overview);
+        mMovieOverviewTextView.setText(movie.getOverview());
 
         // Movie Name TextView
         TextView mMovieNameTextView = (TextView) findViewById(R.id.tv_movie_name);
@@ -114,21 +132,7 @@ public class DetailActivity extends AppCompatActivity
             }
         });
 
-        // Overview TextView
-        TextView mMovieOverviewTextView = (TextView) findViewById(R.id.tv_movie_overview);
-        mMovieOverviewTextView.setText(movie.getOverview());
 
-        // Trailers TextView
-        mMovieTrailersProgressBar = (ProgressBar) findViewById(R.id.pb_trailers_loading_indicator);
-        mMovieTrailersProgressBar.setVisibility(View.VISIBLE);
-        mMovieTrailersTextView = (TextView) findViewById(R.id.tv_movie_trailers);
-        new GetMovieTrailersTask().execute();
-
-        // Reviews TextView
-        mMovieReviewsProgressBar = (ProgressBar) findViewById(R.id.pb_reviews_loading_indicator);
-        mMovieReviewsProgressBar.setVisibility(View.VISIBLE);
-        mMovieReviewsTextView = (TextView) findViewById(R.id.tv_movie_reviews);
-        new GetMovieReviewsTask().execute();
     }
 
     @Override
@@ -148,6 +152,14 @@ public class DetailActivity extends AppCompatActivity
         intent.putExtra("movie", movie);
         setResult(Activity.RESULT_OK, intent);
         super.onBackPressed();
+    }
+
+    private void executeFreshStartTasks() {
+        Intent intent = getIntent();
+        this.movie = intent.getParcelableExtra("movie");
+        this.apiKey = intent.getStringExtra("api_key");
+        new GetMovieTrailersTask().execute();
+        new GetMovieReviewsTask().execute();
     }
 
     private void setFavoriteButtonText() {
@@ -245,9 +257,8 @@ public class DetailActivity extends AppCompatActivity
                 }
             }
 
-            mMovieTrailersProgressBar.setVisibility(View.INVISIBLE);
+            mMovieVideosProgressBar.setVisibility(View.INVISIBLE);
             mMovieVideoAdapter.setMovieVideos(movieVideos);
-            //mMovieTrailersTextView.setText(response);
         }
     }
 
@@ -294,7 +305,6 @@ public class DetailActivity extends AppCompatActivity
             }
             mMovieReviewsProgressBar.setVisibility(View.INVISIBLE);
             mMovieReviewAdapter.setMovieReviews(movieReviews);
-            //mMovieReviewsTextView.setText(response);
         }
     }
 }

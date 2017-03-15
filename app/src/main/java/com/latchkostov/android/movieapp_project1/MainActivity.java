@@ -241,7 +241,6 @@ public class MainActivity extends AppCompatActivity
         }
         this.movies = newMovies;
         mAdapter.setMovies(newMovies);
-        Log.d("", "API CALL COMPLETE");
     }
 
     @Override
