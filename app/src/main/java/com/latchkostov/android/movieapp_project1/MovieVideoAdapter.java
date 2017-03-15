@@ -16,7 +16,7 @@ import android.widget.TextView;
 public class MovieVideoAdapter extends RecyclerView.Adapter<MovieVideoAdapter.MovieVideoAdapterViewHolder> {
 
     private MovieVideo[] movieVideos;
-    private MovieVideoAdapterOnClickHandler mClickHandler;
+    private final MovieVideoAdapterOnClickHandler mClickHandler;
 
     public MovieVideoAdapter(MovieVideoAdapterOnClickHandler mClickHandler) {
         this.mClickHandler = mClickHandler;

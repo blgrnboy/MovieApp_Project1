@@ -31,7 +31,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class DetailActivity extends AppCompatActivity
-implements MovieVideoAdapter.MovieVideoAdapterOnClickHandler {
+    implements MovieVideoAdapter.MovieVideoAdapterOnClickHandler,
+    MovieReviewAdapter.MovieReviewAdapterOnClickHandler {
 
     private String apiKey;
     private Movie movie;
@@ -47,8 +48,12 @@ implements MovieVideoAdapter.MovieVideoAdapterOnClickHandler {
     private TextView mMovieReviewsTextView;
     private ProgressBar mMovieReviewsProgressBar;
     private ProgressBar mMovieTrailersProgressBar;
+
     private MovieVideoAdapter mMovieVideoAdapter;
     private RecyclerView mMovieVideoRecyclerView;
+
+    private MovieReviewAdapter mMovieReviewAdapter;
+    private RecyclerView mMovieReviewRecyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +69,12 @@ implements MovieVideoAdapter.MovieVideoAdapterOnClickHandler {
         mMovieVideoRecyclerView.setAdapter(mMovieVideoAdapter);
 
         // MovieReview RecyclerView
+        mMovieReviewRecyclerView = (RecyclerView) findViewById(R.id.recyclerview_movie_reviews);
+        mMovieReviewRecyclerView.setNestedScrollingEnabled(false);
+        LinearLayoutManager movieReviewsLayoutManager = new LinearLayoutManager(this);
+        mMovieReviewRecyclerView.setLayoutManager(movieReviewsLayoutManager);
+        mMovieReviewAdapter = new MovieReviewAdapter(this);
+        mMovieReviewRecyclerView.setAdapter(mMovieReviewAdapter);
 
         if (savedInstanceState != null && savedInstanceState.containsKey("movie")) {
             this.movie = savedInstanceState.getParcelable("movie");
@@ -189,6 +200,11 @@ implements MovieVideoAdapter.MovieVideoAdapterOnClickHandler {
 
     }
 
+    @Override
+    public void onClick(MovieReview movieReview) {
+
+    }
+
     // Task to get movie trailers
     public class GetMovieTrailersTask extends AsyncTask<Void, Void, String> {
 
@@ -283,6 +299,7 @@ implements MovieVideoAdapter.MovieVideoAdapterOnClickHandler {
                 }
             }
             mMovieReviewsProgressBar.setVisibility(View.INVISIBLE);
+            mMovieReviewAdapter.setMovieReviews(movieReviews);
             //mMovieReviewsTextView.setText(response);
         }
     }
