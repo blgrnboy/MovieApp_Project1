@@ -13,9 +13,13 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -26,7 +30,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class DetailActivity extends AppCompatActivity {
+public class DetailActivity extends AppCompatActivity
+implements MovieVideoAdapter.MovieVideoAdapterOnClickHandler {
 
     private String apiKey;
     private Movie movie;
@@ -42,11 +47,23 @@ public class DetailActivity extends AppCompatActivity {
     private TextView mMovieReviewsTextView;
     private ProgressBar mMovieReviewsProgressBar;
     private ProgressBar mMovieTrailersProgressBar;
+    private MovieVideoAdapter mMovieVideoAdapter;
+    private RecyclerView mMovieVideoRecyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
+
+        // MovieVideo RecyclerView
+        mMovieVideoRecyclerView = (RecyclerView) findViewById(R.id.recyclerview_movie_videos);
+        mMovieVideoRecyclerView.setNestedScrollingEnabled(false);
+        LinearLayoutManager movieVideosLayoutManager = new LinearLayoutManager(this);
+        mMovieVideoRecyclerView.setLayoutManager(movieVideosLayoutManager);
+        mMovieVideoAdapter = new MovieVideoAdapter(this);
+        mMovieVideoRecyclerView.setAdapter(mMovieVideoAdapter);
+
+        // MovieReview RecyclerView
 
         if (savedInstanceState != null && savedInstanceState.containsKey("movie")) {
             this.movie = savedInstanceState.getParcelable("movie");
@@ -167,6 +184,11 @@ public class DetailActivity extends AppCompatActivity {
         return url;
     }
 
+    @Override
+    public void onClick(MovieVideo movieVideo) {
+
+    }
+
     // Task to get movie trailers
     public class GetMovieTrailersTask extends AsyncTask<Void, Void, String> {
 
@@ -214,6 +236,7 @@ public class DetailActivity extends AppCompatActivity {
             }
 
             mMovieTrailersProgressBar.setVisibility(View.INVISIBLE);
+            mMovieVideoAdapter.setMovieVideos(movieVideos);
             //mMovieTrailersTextView.setText(response);
         }
     }
