@@ -35,7 +35,6 @@ public class NetworkUtils {
     }
 
     public static URL uriToUrl(Uri uri) throws MalformedURLException {
-        URL url = new URL(uri.toString());
-        return url;
+        return new URL(uri.toString());
     }
 }

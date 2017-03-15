@@ -3,9 +3,6 @@ package com.latchkostov.android.movieapp_project1;
 import android.app.Application;
 
 import com.facebook.stetho.Stetho;
-import com.facebook.stetho.okhttp3.StethoInterceptor;
-
-import okhttp3.OkHttpClient;
 
 /**
  * Created by latchk on 3/13/17.

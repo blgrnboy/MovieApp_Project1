@@ -8,8 +8,8 @@ import java.util.ArrayList;
 
 public class FavoriteMovies {
     private static final FavoriteMovies ourInstance = new FavoriteMovies();
-    private ArrayList<Movie> favoriteMovies = new ArrayList<Movie>();
-    private ArrayList<Integer> favoriteMovieIds = new ArrayList<Integer>();
+    private final ArrayList<Movie> favoriteMovies = new ArrayList<Movie>();
+    private final ArrayList<Integer> favoriteMovieIds = new ArrayList<Integer>();
 
     public static FavoriteMovies getInstance() {
         return ourInstance;

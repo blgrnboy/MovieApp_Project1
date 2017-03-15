@@ -13,13 +13,11 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -38,22 +36,15 @@ public class DetailActivity extends AppCompatActivity
     private Movie movie;
     private MovieVideo[] movieVideos;
     private MovieReview[] movieReviews;
-    private TextView mMovieNameTextView;
-    private ImageView mMoviePosterImageView;
-    private TextView mReleaseDateTextView;
-    private TextView mVoteAverageTextView;
     private Button mAddRemoveFavoriteButton;
-    private TextView mMovieOverviewTextView;
     private TextView mMovieTrailersTextView;
     private TextView mMovieReviewsTextView;
     private ProgressBar mMovieReviewsProgressBar;
     private ProgressBar mMovieTrailersProgressBar;
 
     private MovieVideoAdapter mMovieVideoAdapter;
-    private RecyclerView mMovieVideoRecyclerView;
 
     private MovieReviewAdapter mMovieReviewAdapter;
-    private RecyclerView mMovieReviewRecyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,7 +52,7 @@ public class DetailActivity extends AppCompatActivity
         setContentView(R.layout.activity_detail);
 
         // MovieVideo RecyclerView
-        mMovieVideoRecyclerView = (RecyclerView) findViewById(R.id.recyclerview_movie_videos);
+        RecyclerView mMovieVideoRecyclerView = (RecyclerView) findViewById(R.id.recyclerview_movie_videos);
         mMovieVideoRecyclerView.setNestedScrollingEnabled(false);
         LinearLayoutManager movieVideosLayoutManager = new LinearLayoutManager(this);
         mMovieVideoRecyclerView.setLayoutManager(movieVideosLayoutManager);
@@ -69,7 +60,7 @@ public class DetailActivity extends AppCompatActivity
         mMovieVideoRecyclerView.setAdapter(mMovieVideoAdapter);
 
         // MovieReview RecyclerView
-        mMovieReviewRecyclerView = (RecyclerView) findViewById(R.id.recyclerview_movie_reviews);
+        RecyclerView mMovieReviewRecyclerView = (RecyclerView) findViewById(R.id.recyclerview_movie_reviews);
         mMovieReviewRecyclerView.setNestedScrollingEnabled(false);
         LinearLayoutManager movieReviewsLayoutManager = new LinearLayoutManager(this);
         mMovieReviewRecyclerView.setLayoutManager(movieReviewsLayoutManager);
@@ -90,22 +81,22 @@ public class DetailActivity extends AppCompatActivity
         setTitle("Details");
 
         // Movie Name TextView
-        mMovieNameTextView = (TextView) findViewById(R.id.tv_movie_name);
+        TextView mMovieNameTextView = (TextView) findViewById(R.id.tv_movie_name);
         mMovieNameTextView.setText(movie.getOriginalTitle());
 
         // Movie Poster ImageView
-        mMoviePosterImageView = (ImageView) findViewById(R.id.iv_movie_poster);
+        ImageView mMoviePosterImageView = (ImageView) findViewById(R.id.iv_movie_poster);
         Picasso.with(this).load(movie.getPosterPath()).into(mMoviePosterImageView);
 
         // Release Date TextView
-        mReleaseDateTextView = (TextView) findViewById(R.id.tv_movie_release_date);
+        TextView mReleaseDateTextView = (TextView) findViewById(R.id.tv_movie_release_date);
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(movie.getReleaseDate());
         mReleaseDateTextView.setText(String.valueOf(calendar.get(Calendar.YEAR)));
 
         // Vote average TextView
-        mVoteAverageTextView = (TextView) findViewById(R.id.tv_vote_average);
-        mVoteAverageTextView.setText(String.valueOf(movie.getVoteAverage()) + "/10");
+        TextView mVoteAverageTextView = (TextView) findViewById(R.id.tv_vote_average);
+        mVoteAverageTextView.setText(String.format(getString(R.string.movieRating), movie.getVoteAverage()));
 
         // Favorite Button
         mAddRemoveFavoriteButton = (Button) findViewById(R.id.btn_addremovefavorite);
@@ -124,7 +115,7 @@ public class DetailActivity extends AppCompatActivity
         });
 
         // Overview TextView
-        mMovieOverviewTextView = (TextView) findViewById(R.id.tv_movie_overview);
+        TextView mMovieOverviewTextView = (TextView) findViewById(R.id.tv_movie_overview);
         mMovieOverviewTextView.setText(movie.getOverview());
 
         // Trailers TextView
@@ -161,9 +152,9 @@ public class DetailActivity extends AppCompatActivity
 
     private void setFavoriteButtonText() {
         if (movie.isFavorite()) {
-            mAddRemoveFavoriteButton.setText("Remove Favorite");
+            mAddRemoveFavoriteButton.setText(getString(R.string.removeFavoriteButtonText));
         } else {
-            mAddRemoveFavoriteButton.setText("Add Favorite");
+            mAddRemoveFavoriteButton.setText(getString(R.string.addFavoriteButtonText));
         }
     }
 
@@ -206,12 +197,12 @@ public class DetailActivity extends AppCompatActivity
     }
 
     // Task to get movie trailers
-    public class GetMovieTrailersTask extends AsyncTask<Void, Void, String> {
+    private class GetMovieTrailersTask extends AsyncTask<Void, Void, String> {
 
         @Override
         protected String doInBackground(Void... params) {
             URL url = buildTrailerRequestURL();
-            String response = null;
+            String response;
             try {
                 response = NetworkUtils.getResponseFromHttpUrl(url);
             } catch (IOException e) {
@@ -224,7 +215,7 @@ public class DetailActivity extends AppCompatActivity
         @Override
         protected void onPostExecute(String response) {
             if (response != null && response.startsWith("Error")) {
-                mMovieTrailersTextView.setText("Could not retrieve trailers: " + response);
+                mMovieTrailersTextView.setText(String.format(getString(R.string.trailersRetrievalError), response));
             }
             else if (response != null && response.length() > 0) {
                 try {
@@ -247,7 +238,7 @@ public class DetailActivity extends AppCompatActivity
                     movieVideos = tempMovieVideos.toArray(new MovieVideo[tempMovieVideos.size()]);
                 } catch (JSONException e) {
                     e.printStackTrace();
-                    mMovieTrailersTextView.setText("Could not retrieve trailers: " + e.getMessage());
+                    mMovieTrailersTextView.setText(String.format(getString(R.string.trailersRetrievalError), e.getMessage()));
                 }
             }
 
@@ -258,12 +249,12 @@ public class DetailActivity extends AppCompatActivity
     }
 
     // Task to get movie reviews
-    public class GetMovieReviewsTask extends AsyncTask<Void, Void, String> {
+    private class GetMovieReviewsTask extends AsyncTask<Void, Void, String> {
 
         @Override
         protected String doInBackground(Void... params) {
             URL url = buildReviewsRequestURL();
-            String response = null;
+            String response;
             try {
                 response = NetworkUtils.getResponseFromHttpUrl(url);
             } catch (IOException e) {
@@ -276,7 +267,7 @@ public class DetailActivity extends AppCompatActivity
         @Override
         protected void onPostExecute(String response) {
             if (response != null && response.startsWith("Error")) {
-                mMovieReviewsTextView.setText("Could not retrieve reviews: " + response);
+                mMovieReviewsTextView.setText(String.format(getString(R.string.reviewsRetrievalError), response));
             }
             else if (response != null && response.length() > 0) {
                 try {
@@ -295,7 +286,7 @@ public class DetailActivity extends AppCompatActivity
                     movieReviews = tempMovieReviews.toArray(new MovieReview[tempMovieReviews.size()]);
                 } catch (JSONException e) {
                     e.printStackTrace();
-                    mMovieReviewsTextView.setText("Could not retrieve reviews: " + e.getMessage());
+                    mMovieReviewsTextView.setText(String.format(getString(R.string.reviewsRetrievalError), e.getMessage()));
                 }
             }
             mMovieReviewsProgressBar.setVisibility(View.INVISIBLE);

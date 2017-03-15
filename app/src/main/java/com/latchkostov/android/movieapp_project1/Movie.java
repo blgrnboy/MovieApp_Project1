@@ -6,6 +6,7 @@ import android.os.Parcelable;
 
 import java.text.ParseException;
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * Created by Latch on 3/10/2017.
@@ -66,10 +67,9 @@ public class Movie implements Parcelable {
     }
 
     public void setReleaseDate(String releaseDate) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
         try {
-            Date date = dateFormat.parse(releaseDate);
-            this.releaseDate = date;
+            this.releaseDate = dateFormat.parse(releaseDate);
         } catch (ParseException e) {
             e.printStackTrace();
         }

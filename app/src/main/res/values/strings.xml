@@ -8,4 +8,15 @@
     <string name="popularMoviesMenuText">Popular</string>
     <string name="topRatedMoviesMenuText">Top Rated</string>
     <string name="favoriteMoviesMenuText">Favorite</string>
+    <string name="movieDetailReviewsHeading">Reviews</string>
+    <string name="movieDetailTrailersHeading">Trailers</string>
+    <string name="moviePoster">Movie Poster</string>
+    <string name="playTrailerButtonText">PLAY</string>
+    <string name="movieRating">%1$.1f/10</string>
+    <string name="test">Test</string>
+    <string name="addFavoriteButtonText">Add Favorite</string>
+    <string name="removeFavoriteButtonText">Remove Favorite</string>
+    <string name="trailersRetrievalError">Could not retrieve trailers: %1$s</string>
+    <string name="reviewsRetrievalError">Could not retrieve reviews: %1$s</string>
+    <string name="reviewAuthor">Author: %1$s</string>
 </resources>

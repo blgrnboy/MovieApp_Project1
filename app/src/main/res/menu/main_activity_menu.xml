@@ -13,7 +13,7 @@
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/menu_favorite"
-        android:title="Favorite"
+        android:title="@string/favoriteMoviesMenuText"
         android:orderInCategory="3"
         app:showAsAction="ifRoom"/>
 </menu>

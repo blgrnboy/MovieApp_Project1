@@ -35,12 +35,10 @@ public class MainActivity extends AppCompatActivity
 
     private int currentMenuSelection;
     private MovieAdapter mAdapter;
-    private RecyclerView mRecyclerView;
     private TextView mErrorTextView;
     private ProgressBar pbLoadingIndicator;
     private String apiKey;
     private String baseMovieUrl;
-    private String baseMovieImageUrl;
     private Movie[] movies;
 
     @Override
@@ -50,7 +48,7 @@ public class MainActivity extends AppCompatActivity
 
         pbLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator);
         mErrorTextView = (TextView) findViewById(R.id.tv_main_error);
-        mRecyclerView = (RecyclerView) findViewById(R.id.recyclerview_movies);
+        RecyclerView mRecyclerView = (RecyclerView) findViewById(R.id.recyclerview_movies);
 
         // Layout
         GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 2);
@@ -61,7 +59,6 @@ public class MainActivity extends AppCompatActivity
 
         apiKey = getApiKey();
         baseMovieUrl = getResources().getString(R.string.tmdb_movieBaseURL);
-        baseMovieImageUrl = getResources().getString(R.string.tmdb_imageBaseURL);
 
         if (savedInstanceState != null && savedInstanceState.containsKey("movies")) {
             this.movies = (Movie[]) savedInstanceState.getParcelableArray("movies");
@@ -256,7 +253,7 @@ public class MainActivity extends AppCompatActivity
     // Task to retrieve movies
     public class MovieDatabaseTask extends AsyncTask<URL, Void, String> {
 
-        MovieCallback callBack;
+        final MovieCallback callBack;
 
         public MovieDatabaseTask(MovieCallback callBack) {
             this.callBack = callBack;
@@ -265,7 +262,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         protected String doInBackground(URL... params) {
             URL url = params[0];
-            String searchResults = null;
+            String searchResults;
             try {
                 searchResults = NetworkUtils.getResponseFromHttpUrl(url);
             } catch (IOException e) {
