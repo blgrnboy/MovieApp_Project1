@@ -6,7 +6,6 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.text.TextUtils;
-import android.view.View;
 
 import com.latchkostov.android.movieapp_project1.utilities.NetworkUtils;
 
