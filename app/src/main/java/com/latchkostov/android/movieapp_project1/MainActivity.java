@@ -3,12 +3,12 @@ package com.latchkostov.android.movieapp_project1;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -31,7 +31,10 @@ import java.net.URL;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity
-        implements MovieAdapter.MovieAdapterOnClickHandler, MovieCallback{
+        implements
+        HttpLoader.HttpLoaderCallbacks,
+        MovieAdapter.MovieAdapterOnClickHandler
+{
 
     private int currentMenuSelection;
     private MovieAdapter mAdapter;
@@ -40,11 +43,18 @@ public class MainActivity extends AppCompatActivity
     private String apiKey;
     private String baseMovieUrl;
     private Movie[] movies;
+    private static final int MOVIE_LOADER = 1;
+    private static final String TMDB_URL_KEY = "tmdbUrl";
+    private HttpLoader movieHttpLoader;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        if (movieHttpLoader == null) {
+            movieHttpLoader = new HttpLoader(TMDB_URL_KEY, this, this);
+        }
 
         pbLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator);
         mErrorTextView = (TextView) findViewById(R.id.tv_main_error);
@@ -60,6 +70,8 @@ public class MainActivity extends AppCompatActivity
         apiKey = getApiKey();
         baseMovieUrl = getResources().getString(R.string.tmdb_movieBaseURL);
 
+        getSupportLoaderManager().initLoader(MOVIE_LOADER, null, movieHttpLoader);
+
         if (savedInstanceState != null && savedInstanceState.containsKey("movies")) {
             this.movies = (Movie[]) savedInstanceState.getParcelableArray("movies");
             this.currentMenuSelection = savedInstanceState.getInt("currentMenuSelection");
@@ -67,6 +79,7 @@ public class MainActivity extends AppCompatActivity
         } else {
             loadPopularMovies();
         }
+
     }
 
     @Override
@@ -131,6 +144,50 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    public void onClick(Movie movie) {
+        Intent intent = new Intent(this, DetailActivity.class);
+        intent.putExtra("movie", movie);
+        intent.putExtra("api_key", apiKey);
+        startActivityForResult(intent, 1);
+    }
+
+    // HTTPLoaderCallbacks
+    @Override
+    public void onStartLoading() {
+        pbLoadingIndicator.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void onSuccess(String data) {
+        mErrorTextView.setText("");
+
+        Movie[] newMovies = parseMovies(data);
+        Movie[] favoriteMovies = FavoriteMovies.getInstance().getAll();
+        if (favoriteMovies != null && favoriteMovies.length > 0) {
+            for (Movie favoriteMovie : favoriteMovies) {
+                for (Movie newMovie : newMovies) {
+                    if (newMovie.getId() == favoriteMovie.getId()) {
+                        newMovie.setFavorite(true);
+                    }
+                }
+            }
+        }
+        this.movies = newMovies;
+        mAdapter.setMovies(newMovies);
+    }
+
+    @Override
+    public void onError(String error) {
+        mErrorTextView.setText(error);
+    }
+
+    @Override
+    public void onFinished(String data) {
+        pbLoadingIndicator.setVisibility(View.INVISIBLE);
+    }
+    // END HTTPLoaderCallbacks
+
     private String getApiKey() {
         String key = null;
         InputStream is = getResources().openRawResource(R.raw.tmdb_apikey);
@@ -147,7 +204,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void loadTopRatedMovies() {
-        pbLoadingIndicator.setVisibility(View.VISIBLE);
         Uri uri = Uri.parse(baseMovieUrl).buildUpon()
                 .appendPath("top_rated")
                 .appendQueryParameter("api_key", apiKey).build();
@@ -159,13 +215,12 @@ public class MainActivity extends AppCompatActivity
         }
 
         if (url != null) {
-            new MovieDatabaseTask(this).execute(url);
+            queryData(url);
         }
         setTitle("Top Movies");
     }
 
     private void loadPopularMovies() {
-        pbLoadingIndicator.setVisibility(View.VISIBLE);
         Uri uri = Uri.parse(baseMovieUrl).buildUpon()
                 .appendPath("popular")
                 .appendQueryParameter("api_key", apiKey).build();
@@ -177,24 +232,34 @@ public class MainActivity extends AppCompatActivity
         }
 
         if (url != null) {
-            new MovieDatabaseTask(this).execute(url);
+            queryData(url);
         }
         setTitle("Popular Movies");
     }
 
-    @Override
-    public void onClick(Movie movie) {
-        Intent intent = new Intent(this, DetailActivity.class);
-        intent.putExtra("movie", movie);
-        intent.putExtra("api_key", apiKey);
-        startActivityForResult(intent, 1);
+    private void queryData(URL url) {
+        Bundle bundle = new Bundle();
+        bundle.putString(TMDB_URL_KEY, url.toString());
+
+        LoaderManager loaderManager = getSupportLoaderManager();
+        Loader<String> movieLoader = loaderManager.getLoader(MOVIE_LOADER);
+
+        if (movieHttpLoader == null) {
+            movieHttpLoader = new HttpLoader(TMDB_URL_KEY, this, this);
+        }
+
+        if (movieLoader == null) {
+            loaderManager.initLoader(MOVIE_LOADER, bundle, movieHttpLoader);
+        } else {
+            loaderManager.restartLoader(MOVIE_LOADER, bundle, movieHttpLoader);
+        }
     }
 
     private Movie[] parseMovies(String json) {
         ArrayList<Movie> movies = new ArrayList<Movie>();
         String tmdbBaseImagePath =
-            getResources().getString(R.string.tmdb_imageBaseURL) +
-            getResources().getString(R.string.tmdb_posterSize);
+                getResources().getString(R.string.tmdb_imageBaseURL) +
+                        getResources().getString(R.string.tmdb_posterSize);
 
         try {
             JSONObject reader = new JSONObject(json);
@@ -221,67 +286,5 @@ public class MainActivity extends AppCompatActivity
         }
 
         return movies.toArray(new Movie[movies.size()]);
-    }
-
-    @Override
-    public void onComplete(String jsonResult) {
-        mErrorTextView.setText("");
-        pbLoadingIndicator.setVisibility(View.INVISIBLE);
-
-        Movie[] newMovies = parseMovies(jsonResult);
-        Movie[] favoriteMovies = FavoriteMovies.getInstance().getAll();
-        if (favoriteMovies != null && favoriteMovies.length > 0) {
-            for (Movie favoriteMovie : favoriteMovies) {
-                for (Movie newMovie : newMovies) {
-                    if (newMovie.getId() == favoriteMovie.getId()) {
-                        newMovie.setFavorite(true);
-                    }
-                }
-            }
-        }
-        this.movies = newMovies;
-        mAdapter.setMovies(newMovies);
-    }
-
-    @Override
-    public void onError(String error) {
-        mErrorTextView.setText(error);
-        pbLoadingIndicator.setVisibility(View.INVISIBLE);
-    }
-
-    // Task to retrieve movies
-    public class MovieDatabaseTask extends AsyncTask<URL, Void, String> {
-
-        final MovieCallback callBack;
-
-        public MovieDatabaseTask(MovieCallback callBack) {
-            this.callBack = callBack;
-        }
-
-        @Override
-        protected String doInBackground(URL... params) {
-            URL url = params[0];
-            String searchResults;
-            try {
-                searchResults = NetworkUtils.getResponseFromHttpUrl(url);
-            } catch (IOException e) {
-                searchResults = "Error - " + e.getMessage();
-            }
-
-            return searchResults;
-        }
-
-        @Override
-        protected void onPostExecute(String searchResults) {
-            if (searchResults != null && !searchResults.equals("")) {
-                if (searchResults.startsWith("Error")) {
-                    callBack.onError(searchResults);
-                } else {
-                    callBack.onComplete(searchResults);
-                }
-            } else {
-                callBack.onError("Something went wrong, there is no data!");
-            }
-        }
     }
 }
