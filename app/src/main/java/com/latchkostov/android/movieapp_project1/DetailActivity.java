@@ -183,7 +183,6 @@ public class DetailActivity extends AppCompatActivity
                             }
                         }
 
-                        mMovieVideosProgressBar.setVisibility(View.INVISIBLE);
                         mMovieVideoAdapter.setMovieVideos(movieVideos);
                     }
 
@@ -235,7 +234,7 @@ public class DetailActivity extends AppCompatActivity
                                 mMovieReviewsTextView.setText(String.format(getString(R.string.reviewsRetrievalError), e.getMessage()));
                             }
                         }
-                        mMovieReviewsProgressBar.setVisibility(View.INVISIBLE);
+
                         mMovieReviewAdapter.setMovieReviews(movieReviews);
                     }
 
