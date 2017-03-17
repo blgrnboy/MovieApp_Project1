@@ -35,7 +35,6 @@ public class HttpLoader implements LoaderManager.LoaderCallbacks<String> {
     private final HttpLoaderCallbacks mCallbacks;
     private final Context context;
     private final boolean cacheData;
-    private String mData;
 
     public HttpLoader(String urlKey, HttpLoaderCallbacks mCallbacks, Context context, boolean cacheData) {
         this.URL_KEY = urlKey;
@@ -47,13 +46,16 @@ public class HttpLoader implements LoaderManager.LoaderCallbacks<String> {
     @Override
     public Loader<String> onCreateLoader(int id, final Bundle args) {
         return new AsyncTaskLoader<String>(context) {
+
+            private String mCachedData = null;
+
             @Override
             protected void onStartLoading() {
                 super.onStartLoading();
                 if (args == null) return;
                 mCallbacks.onStartLoading();
                 if (cacheData) {
-                    if (mData != null) deliverResult(mData);
+                    if (mCachedData != null) deliverResult(mCachedData);
                     else forceLoad();
                 } else {
                     forceLoad();
@@ -85,7 +87,7 @@ public class HttpLoader implements LoaderManager.LoaderCallbacks<String> {
 
             @Override
             public void deliverResult(String data) {
-                if (cacheData) mData = data;
+                if (cacheData) mCachedData = data;
                 super.deliverResult(data);
             }
         };
