@@ -45,8 +45,8 @@ public class DetailActivity extends AppCompatActivity
     private MovieVideoAdapter mMovieVideoAdapter;
     private MovieReviewAdapter mMovieReviewAdapter;
 
-    private HttpLoader movieVideosHttpLoader;
-    private HttpLoader movieReviewsHttpLoader;
+    private static HttpLoader movieVideosHttpLoader;
+    private static HttpLoader movieReviewsHttpLoader;
 
     private static final String MOVIE_VIDEOS_URL_KEY = "movieTrailersUrl";
     private static final String MOVIE_REVIEWS_URL_KEY = "movieReviewsUrl";
@@ -59,8 +59,8 @@ public class DetailActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
 
-        if (movieReviewsHttpLoader == null) initMovieReviewsLoader();
-        if (movieVideosHttpLoader == null) initMovieVideosLoader();
+        if (movieReviewsHttpLoader == null) initMovieReviewsHttpLoader();
+        if (movieVideosHttpLoader == null) initMovieVideosHttpLoader();
 
         // MovieVideo RecyclerView
         RecyclerView mMovieVideoRecyclerView = (RecyclerView) findViewById(R.id.recyclerview_movie_videos);
@@ -147,108 +147,23 @@ public class DetailActivity extends AppCompatActivity
 
     }
 
-    private void initMovieVideosLoader() {
+    private void initMovieVideosHttpLoader() {
         movieVideosHttpLoader = new HttpLoader(
                 MOVIE_VIDEOS_URL_KEY,
-                new HttpLoader.HttpLoaderCallbacks() {
-                    @Override
-                    public void onStartLoading() {
-                        mMovieVideosProgressBar.setVisibility(View.VISIBLE);
-                    }
-
-                    @Override
-                    public void onSuccess(String data) {
-                        if (data != null && data.length() > 0) {
-                            try {
-                                ArrayList<MovieVideo> tempMovieVideos = new ArrayList<MovieVideo>();
-                                JSONObject reader = new JSONObject(data);
-                                JSONArray results = reader.getJSONArray("results");
-                                for (int i = 0; i < results.length(); i++) {
-                                    MovieVideo movieVideo = new MovieVideo();
-                                    JSONObject result = results.getJSONObject(i);
-                                    movieVideo.setId(result.getString("id"));
-                                    movieVideo.setIso_639_1(result.getString("iso_639_1"));
-                                    movieVideo.setIso_3166_1(result.getString("iso_3166_1"));
-                                    movieVideo.setKey(result.getString("key"));
-                                    movieVideo.setName(result.getString("name"));
-                                    movieVideo.setSite(result.getString("site"));
-                                    movieVideo.setSize(result.getInt("size"));
-                                    movieVideo.setType(result.getString("type"));
-                                    tempMovieVideos.add(movieVideo);
-                                }
-                                movieVideos = tempMovieVideos.toArray(new MovieVideo[tempMovieVideos.size()]);
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                                mMovieVideosTextView.setText(String.format(getString(R.string.trailersRetrievalError), e.getMessage()));
-                            }
-                        }
-
-                        mMovieVideoAdapter.setMovieVideos(movieVideos);
-                    }
-
-                    @Override
-                    public void onError(String data) {
-                        mMovieVideosTextView.setText(String.format(getString(R.string.trailersRetrievalError), data));
-                    }
-
-                    @Override
-                    public void onFinished(String data) {
-                        mMovieVideosProgressBar.setVisibility(View.INVISIBLE);
-                    }
-                },
-                this
+                new MovieVideosHttpCallbacks(),
+                this,
+                false
         );
     }
 
-    private void initMovieReviewsLoader() {
+
+
+    private void initMovieReviewsHttpLoader() {
         movieReviewsHttpLoader = new HttpLoader(
                 MOVIE_REVIEWS_URL_KEY,
-                new HttpLoader.HttpLoaderCallbacks() {
-                    @Override
-                    public void onStartLoading() {
-                        mMovieReviewsProgressBar.setVisibility(View.VISIBLE);
-                    }
-
-                    @Override
-                    public void onSuccess(String data) {
-                        if (data != null && data.length() > 0) {
-                            try {
-                                ArrayList<MovieReview> tempMovieReviews = new ArrayList<MovieReview>();
-                                JSONObject reader = new JSONObject(data);
-                                JSONArray results = reader.getJSONArray("results");
-                                for (int i = 0; i < results.length(); i++) {
-                                    MovieReview movieReview = new MovieReview();
-                                    JSONObject result = results.getJSONObject(i);
-                                    movieReview.setId(result.getString("id"));
-                                    movieReview.setAuthor(result.getString("author"));
-                                    movieReview.setContent(result.getString("content"));
-                                    movieReview.setUrl(result.getString("url"));
-                                    tempMovieReviews.add(movieReview);
-                                }
-                                movieReviews = tempMovieReviews.toArray(new MovieReview[tempMovieReviews.size()]);
-                                if (movieReviews.length == 0) {
-                                    mMovieReviewsTextView.setText("There are no reviews");
-                                }
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                                mMovieReviewsTextView.setText(String.format(getString(R.string.reviewsRetrievalError), e.getMessage()));
-                            }
-                        }
-
-                        mMovieReviewAdapter.setMovieReviews(movieReviews);
-                    }
-
-                    @Override
-                    public void onError(String data) {
-                        mMovieReviewsTextView.setText(String.format(getString(R.string.reviewsRetrievalError), data));
-                    }
-
-                    @Override
-                    public void onFinished(String data) {
-                        mMovieReviewsProgressBar.setVisibility(View.INVISIBLE);
-                    }
-                },
-                this
+                new MovieReviewsHttpCallbacks(),
+                this,
+                false
         );
     }
 
@@ -291,10 +206,7 @@ public class DetailActivity extends AppCompatActivity
         Loader<String> movieVideosLoader = loaderManager.getLoader(MOVIE_VIDEOS_LOADER);
 
         if (movieVideosLoader == null) {
-            initMovieVideosLoader();
-        }
-
-        if (movieVideosLoader == null) {
+            initMovieVideosHttpLoader();
             loaderManager.initLoader(MOVIE_VIDEOS_LOADER, bundle, movieVideosHttpLoader);
         } else {
             loaderManager.restartLoader(MOVIE_VIDEOS_LOADER, bundle, movieVideosHttpLoader);
@@ -310,10 +222,7 @@ public class DetailActivity extends AppCompatActivity
         Loader<String> movieReviewsLoader = loaderManager.getLoader(MOVIE_REVIEWS_LOADER);
 
         if (movieReviewsLoader == null) {
-            initMovieReviewsLoader();
-        }
-
-        if (movieReviewsLoader == null) {
+            initMovieReviewsHttpLoader();
             loaderManager.initLoader(MOVIE_REVIEWS_LOADER, bundle, movieReviewsHttpLoader);
         } else {
             loaderManager.restartLoader(MOVIE_REVIEWS_LOADER, bundle, movieReviewsHttpLoader);
@@ -368,5 +277,99 @@ public class DetailActivity extends AppCompatActivity
     @Override
     public void onClick(MovieReview movieReview) {
         // No action needed
+    }
+
+    private class MovieVideosHttpCallbacks implements HttpLoader.HttpLoaderCallbacks {
+
+        @Override
+        public void onStartLoading() {
+            mMovieVideosProgressBar.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        public void onSuccess(String data) {
+            if (data != null && data.length() > 0) {
+                try {
+                    ArrayList<MovieVideo> tempMovieVideos = new ArrayList<MovieVideo>();
+                    JSONObject reader = new JSONObject(data);
+                    JSONArray results = reader.getJSONArray("results");
+                    for (int i = 0; i < results.length(); i++) {
+                        MovieVideo movieVideo = new MovieVideo();
+                        JSONObject result = results.getJSONObject(i);
+                        movieVideo.setId(result.getString("id"));
+                        movieVideo.setIso_639_1(result.getString("iso_639_1"));
+                        movieVideo.setIso_3166_1(result.getString("iso_3166_1"));
+                        movieVideo.setKey(result.getString("key"));
+                        movieVideo.setName(result.getString("name"));
+                        movieVideo.setSite(result.getString("site"));
+                        movieVideo.setSize(result.getInt("size"));
+                        movieVideo.setType(result.getString("type"));
+                        tempMovieVideos.add(movieVideo);
+                    }
+                    movieVideos = tempMovieVideos.toArray(new MovieVideo[tempMovieVideos.size()]);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    mMovieVideosTextView.setText(String.format(getString(R.string.trailersRetrievalError), e.getMessage()));
+                }
+            }
+
+            mMovieVideoAdapter.setMovieVideos(movieVideos);
+        }
+
+        @Override
+        public void onError(String data) {
+            mMovieVideosTextView.setText(String.format(getString(R.string.trailersRetrievalError), data));
+        }
+
+        @Override
+        public void onFinished(String data) {
+            mMovieVideosProgressBar.setVisibility(View.INVISIBLE);
+        }
+    }
+
+    private class MovieReviewsHttpCallbacks implements HttpLoader.HttpLoaderCallbacks {
+        @Override
+        public void onStartLoading() {
+            mMovieReviewsProgressBar.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        public void onSuccess(String data) {
+            if (data != null && data.length() > 0) {
+                try {
+                    ArrayList<MovieReview> tempMovieReviews = new ArrayList<MovieReview>();
+                    JSONObject reader = new JSONObject(data);
+                    JSONArray results = reader.getJSONArray("results");
+                    for (int i = 0; i < results.length(); i++) {
+                        MovieReview movieReview = new MovieReview();
+                        JSONObject result = results.getJSONObject(i);
+                        movieReview.setId(result.getString("id"));
+                        movieReview.setAuthor(result.getString("author"));
+                        movieReview.setContent(result.getString("content"));
+                        movieReview.setUrl(result.getString("url"));
+                        tempMovieReviews.add(movieReview);
+                    }
+                    movieReviews = tempMovieReviews.toArray(new MovieReview[tempMovieReviews.size()]);
+                    if (movieReviews.length == 0) {
+                        mMovieReviewsTextView.setText("There are no reviews");
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    mMovieReviewsTextView.setText(String.format(getString(R.string.reviewsRetrievalError), e.getMessage()));
+                }
+            }
+
+            mMovieReviewAdapter.setMovieReviews(movieReviews);
+        }
+
+        @Override
+        public void onError(String data) {
+            mMovieReviewsTextView.setText(String.format(getString(R.string.reviewsRetrievalError), data));
+        }
+
+        @Override
+        public void onFinished(String data) {
+            mMovieReviewsProgressBar.setVisibility(View.INVISIBLE);
+        }
     }
 }

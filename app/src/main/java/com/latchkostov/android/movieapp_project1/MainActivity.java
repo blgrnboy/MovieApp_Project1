@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity
     private Movie[] movies;
     private static final int MOVIE_LOADER = 1;
     private static final String TMDB_URL_KEY = "tmdbUrl";
-    private HttpLoader movieHttpLoader;
+    private static HttpLoader movieHttpLoader;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         if (movieHttpLoader == null) {
-            movieHttpLoader = new HttpLoader(TMDB_URL_KEY, this, this);
+            movieHttpLoader = new HttpLoader(TMDB_URL_KEY, this, this, false);
         }
 
         pbLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator);
@@ -69,7 +69,6 @@ public class MainActivity extends AppCompatActivity
 
         apiKey = getApiKey();
         baseMovieUrl = getResources().getString(R.string.tmdb_movieBaseURL);
-
         getSupportLoaderManager().initLoader(MOVIE_LOADER, null, movieHttpLoader);
 
         if (savedInstanceState != null && savedInstanceState.containsKey("movies")) {
@@ -79,6 +78,7 @@ public class MainActivity extends AppCompatActivity
         } else {
             loadPopularMovies();
         }
+
 
     }
 
@@ -184,6 +184,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onFinished(String data) {
+        getSupportLoaderManager().destroyLoader(MOVIE_LOADER);
         pbLoadingIndicator.setVisibility(View.INVISIBLE);
     }
     // END HTTPLoaderCallbacks
@@ -243,10 +244,6 @@ public class MainActivity extends AppCompatActivity
 
         LoaderManager loaderManager = getSupportLoaderManager();
         Loader<String> movieLoader = loaderManager.getLoader(MOVIE_LOADER);
-
-        if (movieHttpLoader == null) {
-            movieHttpLoader = new HttpLoader(TMDB_URL_KEY, this, this);
-        }
 
         if (movieLoader == null) {
             loaderManager.initLoader(MOVIE_LOADER, bundle, movieHttpLoader);

@@ -6,6 +6,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.latchkostov.android.movieapp_project1.utilities.NetworkUtils;
 
@@ -33,11 +34,14 @@ public class HttpLoader implements LoaderManager.LoaderCallbacks<String> {
     private final String URL_KEY;
     private final HttpLoaderCallbacks mCallbacks;
     private final Context context;
+    private final boolean cacheData;
+    private String mData;
 
-    public HttpLoader(String urlKey, HttpLoaderCallbacks mCallbacks, Context view) {
+    public HttpLoader(String urlKey, HttpLoaderCallbacks mCallbacks, Context context, boolean cacheData) {
         this.URL_KEY = urlKey;
         this.mCallbacks = mCallbacks;
-        this.context = view;
+        this.context = context;
+        this.cacheData = cacheData;
     }
 
     @Override
@@ -45,9 +49,15 @@ public class HttpLoader implements LoaderManager.LoaderCallbacks<String> {
         return new AsyncTaskLoader<String>(context) {
             @Override
             protected void onStartLoading() {
+                super.onStartLoading();
                 if (args == null) return;
                 mCallbacks.onStartLoading();
-                forceLoad();
+                if (cacheData) {
+                    if (mData != null) deliverResult(mData);
+                    else forceLoad();
+                } else {
+                    forceLoad();
+                }
             }
 
             @Override
@@ -60,6 +70,7 @@ public class HttpLoader implements LoaderManager.LoaderCallbacks<String> {
                 try {
                     URL url = new URL(strURL);
                     try {
+                        Log.d("", "Making an HTTP call to " + strURL);
                         searchResults = NetworkUtils.getResponseFromHttpUrl(url);
                     } catch (IOException e) {
                         searchResults = "Error - " + e.getMessage();
@@ -71,11 +82,26 @@ public class HttpLoader implements LoaderManager.LoaderCallbacks<String> {
 
                 return searchResults;
             }
+
+            @Override
+            public void deliverResult(String data) {
+                if (cacheData) mData = data;
+                super.deliverResult(data);
+            }
         };
     }
 
     @Override
     public void onLoadFinished(Loader<String> loader, String data) {
+        executeCallbacks(data);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<String> loader) {
+
+    }
+
+    private void executeCallbacks(String data) {
         this.mCallbacks.onFinished(data);
         if (data != null && !data.equals("")) {
             if (data.startsWith("Error")) {
@@ -86,11 +112,6 @@ public class HttpLoader implements LoaderManager.LoaderCallbacks<String> {
         } else {
             this.mCallbacks.onError("Something went wrong, there is no data!");
         }
-    }
-
-    @Override
-    public void onLoaderReset(Loader<String> loader) {
-
     }
 
 }
